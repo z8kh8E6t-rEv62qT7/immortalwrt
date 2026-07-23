@@ -38,11 +38,10 @@ $(eval $(call KernelPackage,bluetooth))
 define KernelPackage/hci-uart
   SUBMENU:=$(BLUETOOTH_MENU)
   TITLE:=Bluetooth HCI UART support
-  DEPENDS:=+kmod-bluetooth +kmod-btbcm
+  DEPENDS:=+kmod-bluetooth
   KCONFIG:= \
 	CONFIG_BT_HCIUART \
-	CONFIG_BT_HCIUART_AML=n \
-	CONFIG_BT_HCIUART_BCM=y \
+	CONFIG_BT_HCIUART_BCM=n \
 	CONFIG_BT_HCIUART_INTEL=n \
 	CONFIG_BT_HCIUART_H4 \
 	CONFIG_BT_HCIUART_NOKIA=n
@@ -61,10 +60,10 @@ $(eval $(call KernelPackage,hci-uart))
 define KernelPackage/btusb
   SUBMENU:=$(BLUETOOTH_MENU)
   TITLE:=Bluetooth HCI USB support
-  DEPENDS:=@USB_SUPPORT +kmod-usb-core +kmod-bluetooth +kmod-btbcm +kmod-btmtk
+  DEPENDS:=@USB_SUPPORT +kmod-usb-core +kmod-bluetooth +kmod-btmtk
   KCONFIG:= \
 	CONFIG_BT_HCIBTUSB \
-	CONFIG_BT_HCIBTUSB_BCM=y \
+	CONFIG_BT_HCIBTUSB_BCM=n \
 	CONFIG_BT_HCIBTUSB_MTK=y \
 	CONFIG_BT_HCIBTUSB_RTL=y
   FILES:= \
@@ -79,18 +78,6 @@ define KernelPackage/btusb/description
 endef
 
 $(eval $(call KernelPackage,btusb))
-
-
-define KernelPackage/btbcm
-  SUBMENU:=$(BLUETOOTH_MENU)
-  TITLE:=Broadcom Bluetooth support
-  HIDDEN:=1
-  DEPENDS:=+kmod-bluetooth
-  KCONFIG:=CONFIG_BT_BCM
-  FILES:=$(LINUX_DIR)/drivers/bluetooth/btbcm.ko
-endef
-
-$(eval $(call KernelPackage,btbcm))
 
 
 define KernelPackage/btmtk

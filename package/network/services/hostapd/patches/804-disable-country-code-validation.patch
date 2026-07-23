@@ -1,0 +1,43 @@
+Index: hostapd-2025.08.26~ca266cc2/hostapd/config_file.c
+===================================================================
+--- hostapd-2025.08.26~ca266cc2.orig/hostapd/config_file.c
++++ hostapd-2025.08.26~ca266cc2/hostapd/config_file.c
+@@ -2374,13 +2374,6 @@ static int hostapd_config_fill(struct ho
+ 		os_free(bss->config_id);
+ 		bss->config_id = os_strdup(pos);
+ 	} else if (os_strcmp(buf, "country_code") == 0) {
+-		if (pos[0] < 'A' || pos[0] > 'Z' ||
+-		    pos[1] < 'A' || pos[1] > 'Z') {
+-			wpa_printf(MSG_ERROR,
+-				   "Line %d: Invalid country_code '%s'",
+-				   line, pos);
+-			return 1;
+-		}
+ 		os_memcpy(conf->country, pos, 2);
+ 	} else if (os_strcmp(buf, "country3") == 0) {
+ 		conf->country[2] = strtol(pos, NULL, 16);
+Index: hostapd-2025.08.26~ca266cc2/src/ap/ap_config.c
+===================================================================
+--- hostapd-2025.08.26~ca266cc2.orig/src/ap/ap_config.c
++++ hostapd-2025.08.26~ca266cc2/src/ap/ap_config.c
+@@ -1559,20 +1559,7 @@ int hostapd_config_check(struct hostapd_
+ 		conf->hw_mode = HOSTAPD_MODE_IEEE80211A;
+ 	}
+ 
+-	if (full_config && conf->ieee80211d &&
+-	    (!conf->country[0] || !conf->country[1])) {
+-		wpa_printf(MSG_ERROR, "Cannot enable IEEE 802.11d without "
+-			   "setting the country_code");
+-		return -1;
+-	}
+-
+-	if (full_config && conf->ieee80211h && !conf->ieee80211d) {
+-		wpa_printf(MSG_ERROR, "Cannot enable IEEE 802.11h without "
+-			   "IEEE 802.11d enabled");
+-		return -1;
+-	}
+-
+ 	if (full_config && conf->local_pwr_constraint != -1 &&
+ 	    !conf->ieee80211d) {
+ 		wpa_printf(MSG_ERROR, "Cannot add Power Constraint element without Country element");
+ 		return -1;

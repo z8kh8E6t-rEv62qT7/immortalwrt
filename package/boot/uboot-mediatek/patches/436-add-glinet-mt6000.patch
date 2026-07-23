@@ -265,6 +265,6 @@
 +boot_tftp_write_fip=tftpboot $loadaddr $bootfile_fip && run emmc_write_fip
 +boot_tftp_write_bl2=tftpboot $loadaddr $bootfile_bl2 && run emmc_write_bl2
 +emmc_write_firmware=part start mmc 0 kernel part_addr && run filesize_to_blk && mmc write $loadaddr $part_addr $cnt
-+emmc_write_bl2=run filesize_to_blk && test 0x$cnt -le 0x800 && mmc partconf 0 1 1 1 &&  && mmc write $loadaddr 0x0 0x800 ; mmc partconf 0 1 1 0
++emmc_write_bl2=run filesize_to_blk && test 0x$cnt -le 0x800 && mmc partconf 0 1 1 1 && mmc write $loadaddr 0x0 0x800 ; mmc partconf 0 1 1 0
 +emmc_write_fip=part start mmc 0 fip part_addr && part size mmc 0 fip part_size && run filesize_to_blk && test 0x$cnt -le 0x$part_size && mmc write $loadaddr $part_addr $cnt
 +reset_factory=eraseenv && reset

@@ -8,9 +8,9 @@ PKG_LICENSE_FILES:=
 
 PKG_SOURCE_URL:=https://github.com/openwrt/mt76
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_DATE:=2026-03-19
-PKG_SOURCE_VERSION:=39c960c3ada558b4c2e7915772483d3731573d09
-PKG_MIRROR_HASH:=7a9f8ea21eee5324e6638ace627dd305b3650ae6ca86109317d9ee83702140eb
+PKG_SOURCE_DATE:=2026-03-21
+PKG_SOURCE_VERSION:=018f60316d4dd6b4e741874eda40e2dfaa29df3b
+PKG_MIRROR_HASH:=54a8125453a6fe04c89cf5335bdf0ea16c409361e1e5a79fb339d67cee26df0e
 
 PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 PKG_USE_NINJA:=0
@@ -259,6 +259,26 @@ define KernelPackage/mt7986-firmware
   $(KernelPackage/mt76-default)
   DEPENDS:=@TARGET_mediatek_filogic
   TITLE:=MediaTek MT7986 firmware
+endef
+
+define Package/mt7981-wo-firmware
+  SECTION:=firmware
+  CATEGORY:=Firmware
+  TITLE:=MediaTek MT7981 offload firmware
+  DEPENDS:=@TARGET_mediatek_filogic
+  LICENSE:=MediaTek firmware
+  LICENSE_FILES:=firmware/LICENCE.mediatek
+  PKGARCH:=all
+endef
+
+define Package/mt7986-wo-firmware
+  SECTION:=firmware
+  CATEGORY:=Firmware
+  TITLE:=MediaTek MT7986 offload firmware
+  DEPENDS:=@TARGET_mediatek_filogic
+  LICENSE:=MediaTek firmware
+  LICENSE_FILES:=firmware/LICENCE.mediatek
+  PKGARCH:=all
 endef
 
 define KernelPackage/mt7921-firmware
@@ -647,6 +667,21 @@ define KernelPackage/mt7986-firmware/install
 		$(1)/lib/firmware/mediatek
 endef
 
+define Package/mt7981-wo-firmware/install
+	$(INSTALL_DIR) $(1)/lib/firmware/mediatek
+	$(INSTALL_DATA) \
+		$(PKG_BUILD_DIR)/firmware/mt7981_wo.bin \
+		$(1)/lib/firmware/mediatek
+endef
+
+define Package/mt7986-wo-firmware/install
+	$(INSTALL_DIR) $(1)/lib/firmware/mediatek
+	$(INSTALL_DATA) \
+		$(PKG_BUILD_DIR)/firmware/mt7986_wo_0.bin \
+		$(PKG_BUILD_DIR)/firmware/mt7986_wo_1.bin \
+		$(1)/lib/firmware/mediatek
+endef
+
 define KernelPackage/mt7921-firmware/install
 	$(INSTALL_DIR) $(1)/lib/firmware/mediatek
 	cp \
@@ -772,6 +807,8 @@ $(eval $(call KernelPackage,mt7915e))
 $(eval $(call KernelPackage,mt7916-firmware))
 $(eval $(call KernelPackage,mt7981-firmware))
 $(eval $(call KernelPackage,mt7986-firmware))
+$(eval $(call BuildPackage,mt7981-wo-firmware))
+$(eval $(call BuildPackage,mt7986-wo-firmware))
 $(eval $(call KernelPackage,mt7921-firmware))
 $(eval $(call KernelPackage,mt7922-firmware))
 $(eval $(call KernelPackage,mt7925-firmware))

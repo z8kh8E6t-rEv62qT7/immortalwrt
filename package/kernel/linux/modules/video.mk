@@ -280,23 +280,21 @@ endef
 $(eval $(call KernelPackage,fb-tft-ili9486))
 
 
-define KernelPackage/multimedia-input
+define KernelPackage/cec-core
   SUBMENU:=$(VIDEO_MENU)
-  TITLE:=Multimedia input support
-  DEPENDS:=+kmod-input-core
-  KCONFIG:=CONFIG_RC_CORE \
-	CONFIG_LIRC=y \
-	CONFIG_RC_DECODERS=y \
-	CONFIG_RC_DEVICES=y
-  FILES:=$(LINUX_DIR)/drivers/media/rc/rc-core.ko
-  AUTOLOAD:=$(call AutoProbe,rc-core)
+  TITLE:=CEC framework
+  HIDDEN:=1
+  KCONFIG:=CONFIG_CEC_CORE
+  DEPENDS:=@LINUX_6_18
+  FILES:=$(LINUX_DIR)/drivers/media/cec/core/cec.ko
+  AUTOLOAD:=$(call AutoProbe,cec)
 endef
 
-define KernelPackage/multimedia-input/description
-  Enable multimedia input.
+define KernelPackage/cec-core/description
+  CEC framework.
 endef
 
-$(eval $(call KernelPackage,multimedia-input))
+$(eval $(call KernelPackage,cec-core))
 
 
 define KernelPackage/drm
@@ -318,7 +316,6 @@ endef
 
 $(eval $(call KernelPackage,drm))
 
-
 define KernelPackage/drm-buddy
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=A page based buddy allocator
@@ -335,10 +332,27 @@ endef
 
 $(eval $(call KernelPackage,drm-buddy))
 
+
+define KernelPackage/drm-client-lib
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=DRM client library setup helper
+  DEPENDS:=@DISPLAY_SUPPORT @LINUX_6_18 +kmod-drm +kmod-drm-kms-helper
+  KCONFIG:=CONFIG_DRM_CLIENT_LIB
+  FILES:= $(LINUX_DIR)/drivers/gpu/drm/clients/drm_client_lib.ko
+  AUTOLOAD:=$(call AutoProbe,drm_client_lib)
+endef
+
+define KernelPackage/drm-client-lib/description
+  DRM client library setup helper
+endef
+
+$(eval $(call KernelPackage,drm-client-lib))
+
+
 define KernelPackage/drm-display-helper
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=DRM helpers for display adapters drivers
-  DEPENDS:=@DISPLAY_SUPPORT +kmod-drm-kms-helper
+  DEPENDS:=@DISPLAY_SUPPORT +kmod-drm-kms-helper +LINUX_6_18:kmod-cec-core
   HIDDEN:=1
   KCONFIG:=CONFIG_DRM_DISPLAY_HELPER
   FILES:=$(LINUX_DIR)/drivers/gpu/drm/display/drm_display_helper.ko
@@ -350,7 +364,6 @@ define KernelPackage/drm-display-helper/description
 endef
 
 $(eval $(call KernelPackage,drm-display-helper))
-
 
 define KernelPackage/drm-exec
   SUBMENU:=$(VIDEO_MENU)
@@ -367,7 +380,6 @@ define KernelPackage/drm-exec/description
 endef
 
 $(eval $(call KernelPackage,drm-exec))
-
 
 define KernelPackage/drm-dma-helper
   SUBMENU:=$(VIDEO_MENU)
@@ -407,7 +419,8 @@ define KernelPackage/drm-mipi-dbi
   SUBMENU:=$(VIDEO_MENU)
   HIDDEN:=1
   TITLE:=MIPI DBI helpers
-  DEPENDS:=@DISPLAY_SUPPORT +kmod-backlight +kmod-drm-kms-helper
+  DEPENDS:=@DISPLAY_SUPPORT +kmod-backlight +kmod-drm-kms-helper \
+    +LINUX_6_18:kmod-drm-client-lib
   KCONFIG:=CONFIG_DRM_MIPI_DBI
   FILES:=$(LINUX_DIR)/drivers/gpu/drm/drm_mipi_dbi.ko
   AUTOLOAD:=$(call AutoProbe,drm_mipi_dbi)
@@ -460,7 +473,8 @@ define KernelPackage/drm-ttm-helper
   TITLE:=Helpers for ttm-based gem objects
   HIDDEN:=1
   DEPENDS:=@DISPLAY_SUPPORT +kmod-drm-ttm +kmod-drm-kms-helper
-  KCONFIG:=CONFIG_DRM_TTM_HELPER
+  KCONFIG:=CONFIG_DRM_TTM_HELPER \
+	   CONFIG_DRM_DISPLAY_HELPER_CEC=n
   FILES:=$(LINUX_DIR)/drivers/gpu/drm/drm_ttm_helper.ko
   AUTOLOAD:=$(call AutoProbe,drm_ttm_helper)
 endef
@@ -525,7 +539,7 @@ define KernelPackage/drm-amdgpu
   DEPENDS:=@TARGET_x86||TARGET_loongarch64 @DISPLAY_SUPPORT +kmod-backlight +kmod-drm-ttm \
 	+kmod-drm-ttm-helper +kmod-drm-kms-helper +kmod-i2c-algo-bit +amdgpu-firmware \
 	+kmod-drm-display-helper +kmod-drm-buddy +kmod-acpi-video \
-	+kmod-drm-exec +kmod-drm-suballoc-helper
+	+kmod-drm-exec +kmod-drm-suballoc-helper +kmod-drm +kmod-drm-panel-backlight-quirks
   KCONFIG:=CONFIG_DRM_AMDGPU \
 	CONFIG_DRM_AMDGPU_SI=y \
 	CONFIG_DRM_AMDGPU_CIK=y \
@@ -683,66 +697,6 @@ endef
 
 $(eval $(call KernelPackage,drm-imx-ldb))
 
-define KernelPackage/drm-lima
-  SUBMENU:=$(VIDEO_MENU)
-  TITLE:=Mali-4xx GPU support
-  DEPENDS:=@(TARGET_rockchip||TARGET_sunxi) +kmod-drm +kmod-drm-shmem-helper
-  KCONFIG:= \
-	CONFIG_DRM_VGEM \
-	CONFIG_DRM_GEM_CMA_HELPER=y \
-	CONFIG_DRM_LIMA
-  FILES:= \
-	$(LINUX_DIR)/drivers/gpu/drm/vgem/vgem.ko \
-	$(LINUX_DIR)/drivers/gpu/drm/scheduler/gpu-sched.ko \
-	$(LINUX_DIR)/drivers/gpu/drm/lima/lima.ko
-  AUTOLOAD:=$(call AutoProbe,lima vgem)
-endef
-
-define KernelPackage/drm-lima/description
-  Open-source reverse-engineered driver for Mali-4xx GPUs
-endef
-
-$(eval $(call KernelPackage,drm-lima))
-
-define KernelPackage/drm-panfrost
-  SUBMENU:=$(VIDEO_MENU)
-  TITLE:=DRM support for ARM Mali Midgard/Bifrost GPUs
-  DEPENDS:=@(TARGET_rockchip||TARGET_sunxi) +kmod-drm +kmod-drm-shmem-helper
-  KCONFIG:=CONFIG_DRM_PANFROST
-  FILES:= \
-	$(LINUX_DIR)/drivers/gpu/drm/panfrost/panfrost.ko \
-	$(LINUX_DIR)/drivers/gpu/drm/scheduler/gpu-sched.ko
-  AUTOLOAD:=$(call AutoProbe,panfrost)
-endef
-
-define KernelPackage/drm-panfrost/description
-  DRM driver for ARM Mali Midgard (T6xx, T7xx, T8xx) and
-  Bifrost (G3x, G5x, G7x) GPUs
-endef
-
-$(eval $(call KernelPackage,drm-panfrost))
-
-define KernelPackage/drm-panthor
-  SUBMENU:=$(VIDEO_MENU)
-  TITLE:=DRM support for ARM Mali CSF-based GPUs
-  DEPENDS:=@TARGET_rockchip +kmod-drm +kmod-drm-exec \
-	+kmod-drm-shmem-helper +panthor-firmware
-  KCONFIG:= \
-	CONFIG_DRM_GPUVM \
-	CONFIG_DRM_PANTHOR
-  FILES:= \
-	$(LINUX_DIR)/drivers/gpu/drm/drm_gpuvm.ko \
-	$(LINUX_DIR)/drivers/gpu/drm/panthor/panthor.ko \
-	$(LINUX_DIR)/drivers/gpu/drm/scheduler/gpu-sched.ko
-  AUTOLOAD:=$(call AutoProbe,panthor)
-endef
-
-define KernelPackage/drm-panthor/description
-  DRM driver for ARM Mali Mali (or Immortalis) Valhall Gxxx GPUs
-endef
-
-$(eval $(call KernelPackage,drm-panthor))
-
 define KernelPackage/drm-panel-mipi-dbi
   SUBMENU:=$(VIDEO_MENU)
   TITLE:=Generic MIPI DBI LCD panel
@@ -760,6 +714,23 @@ define KernelPackage/drm-panel-mipi-dbi/description
 endef
 
 $(eval $(call KernelPackage,drm-panel-mipi-dbi))
+
+
+define KernelPackage/drm-panel-backlight-quirks
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=Panel backlight quirks
+  HIDDEN:=1
+  KCONFIG:=CONFIG_DRM_PANEL_BACKLIGHT_QUIRKS
+  DEPENDS:=+kmod-backlight
+  FILES:=$(LINUX_DIR)/drivers/gpu/drm/drm_panel_backlight_quirks.ko
+  AUTOLOAD:=$(call AutoProbe,panel-backlight-quirks)
+endef
+
+define KernelPackage/drm-panel-backlight-quirks/description
+  Panel backlight quirks
+endef
+
+$(eval $(call KernelPackage,drm-panel-backlight-quirks))
 
 
 define KernelPackage/drm-panel-simple
@@ -806,7 +777,7 @@ define KernelPackage/drm-radeon
   DEPENDS:=@TARGET_x86 @DISPLAY_SUPPORT +kmod-backlight +kmod-drm-kms-helper \
 	+kmod-drm-ttm +kmod-drm-ttm-helper +kmod-i2c-algo-bit +radeon-firmware \
 	+kmod-drm-display-helper +kmod-acpi-video +kmod-drm-suballoc-helper \
-	+kmod-fb-io-fops
+	+kmod-fb-io-fops +kmod-drm-exec
   KCONFIG:=CONFIG_DRM_RADEON
   FILES:=$(LINUX_DIR)/drivers/gpu/drm/radeon/radeon.ko
   AUTOLOAD:=$(call AutoProbe,radeon)
@@ -1487,6 +1458,45 @@ define KernelPackage/video-gspca-konica/description
 endef
 
 $(eval $(call KernelPackage,video-gspca-konica))
+
+
+define KernelPackage/video-sun6i-csi
+  SUBMENU:=$(VIDEO_MENU)
+  DEPENDS:=@TARGET_sunxi +kmod-video-fwnode +kmod-video-async +kmod-video-videobuf2 +kmod-video-dma-contig
+  TITLE:=Allwinner A31 Camera Sensor Interface (CSI)
+  KCONFIG:=CONFIG_VIDEO_SUN6I_CSI
+  FILES:=$(LINUX_DIR)/drivers/media/platform/sunxi/sun6i-csi/sun6i-csi.ko
+  AUTOLOAD:=$(call AutoProbe,sun6i-csi)
+  $(call AddDepends/video)
+endef
+
+define KernelPackage/video-sun6i-csi/description
+  Support for the Allwinner A31 Camera Sensor Interface (CSI)
+  controller, also found on other platforms such as the A83T, H3,
+  V3/V3s or A64.
+endef
+
+$(eval $(call KernelPackage,video-sun6i-csi))
+
+define KernelPackage/video-ov5640
+  SUBMENU:=$(VIDEO_MENU)
+  DEPENDS:=+kmod-video-fwnode +kmod-video-async
+  TITLE:=OmniVision OV5640 sensor support
+  KCONFIG:= \
+	CONFIG_VIDEO_CAMERA_SENSOR=y \
+	CONFIG_VIDEO_OV5640
+  FILES:=$(LINUX_DIR)/drivers/media/i2c/ov5640.ko
+  AUTOLOAD:=$(call AutoProbe,ov5640)
+  $(call AddDepends/video)
+endef
+
+define KernelPackage/video-ov5640/description
+  This is a Video4Linux2 sensor driver for the Omnivision
+  OV5640 camera sensor with a MIPI CSI-2 interface.
+endef
+
+$(eval $(call KernelPackage,video-ov5640))
+
 
 #
 # Video Processing

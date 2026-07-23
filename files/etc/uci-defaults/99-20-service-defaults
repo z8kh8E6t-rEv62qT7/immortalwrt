@@ -1,0 +1,20 @@
+#!/bin/sh
+
+if [ -x /etc/init.d/mosdns ]; then
+	/etc/init.d/mosdns enable
+	/etc/init.d/mosdns start
+fi
+
+for service in \
+	smartd lldpd sudo qos unbound tor tor-hs aria2 transmission ttyd \
+	nfs nfsd rpcbind ksmbd samba4 wsdd2 cifs-mount \
+	mesh11sd babeld umdns mwan3 radius cd8021x chilli \
+	bitsrunlogin-go chronyd
+do
+	if [ -x "/etc/init.d/$service" ]; then
+		"/etc/init.d/$service" disable >/dev/null 2>&1 || true
+		"/etc/init.d/$service" stop >/dev/null 2>&1 || true
+	fi
+done
+
+exit 0

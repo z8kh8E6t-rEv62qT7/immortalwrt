@@ -1,9 +1,10 @@
 *.o
 .DS_Store
 .*.swp
+/dump
 /env
 /dl
-/.config
+/.config.*
 /.config.old
 /.toolchain_build_ver
 /bin
@@ -13,7 +14,6 @@
 /logs
 /feeds
 /feeds.conf
-/files
 /target/linux/feeds
 /overlay
 /package/feeds
